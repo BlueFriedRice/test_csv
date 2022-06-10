@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+  
+    <head>
+      <meta charset='utf-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+      <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+      <link rel='stylesheet' type='text/css' media='screen' href='https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css'>
+      <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+
+      <link rel="icon" type="image/png" href="./images/BASS_log.png" />
+      <title>BASS Monitoring System</title>
+
+      <py-env>
+        - pymysql
+        - pandas
+        - paths:
+          - ./p_info2.csv
+      </py-env>
+    </head>
+
+    <body>
+
+      <header>
+        <section class="hero is-primary is-small">
+          <div class="hero-body">
+              <p class="title is-3">BASS — Monitoring System Example <span class="tag is-white">V.1</span></p>
+              <p class="subtitle is-6" style="margin-top: 20px;">
+                  바쓰 모니터링 시스템, 이상이 있을 경우 <a href="https://www.google.com/" target="_blank"><code>바쓰공식홈페이지</code></a>로
+                  <strong> 문의 바랍니다.</strong> 
+              </p>
+          </div>
+      </section>
+      </header>
+
+      <div class="container is-white is-fluid" style="margin-top:10px">
+        <div class="field has-addons">
+
+          <button id="new-task-btn" class="p-2 text-white bg-blue-600 border border-blue-600 rounded" type="button">
+            메인화면으로 이동
+          </button>
+
+          <button id="new-task-btn" class="p-2 text-white bg-blue-600 border border-blue-600 rounded" type="button" style="margin-left: 30px;">
+            대시보드로 이동
+          </button>
+
+          <div class="control is-expanded" style="margin-left: 30px;">
+            <div class="select is-fullwidth">
+                <select name="operation" id="room_option">
+                  <option value="total">전체호실</option>
+                  <option value="first">1호실</option>
+                  <option value="second">2호실</option>
+                  <option value="third">3호실</option>
+                  <option value="fourth">4호실</option>
+                </select>
+              </div>
+          </div>
+
+          <div class="control is-expanded" style="margin-left: 30px;">
+            <div class="select is-fullwidth">
+              <select name="operation" id="patient_option">
+                <option value="p_total">전체 환자</option>
+                <option value="fallen">낙상 주의 환자</option>
+                <option value="bedsore">욕창 주의 환자</option>
+              </select>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      
+      <hr style="border: solid 0.2px rgb(192, 192, 192); margin-top: 10px;">
+
+      <div id = main_container class="container is-white is-fluid" style="margin-top:10px">
+
+      </div>
+
+      <py-script>
+import pymysql as ps
+import pandas as pd
+import os
+from js import console
+
+main_container = Element("main_container")
+
+room_option = Element("room_option")
+patient_option = Element("patient_option")
+room_option_name = room_option.value
+patient_option_name = patient_option.value
+
+new_row_field = ""
+result = ""
+
+p_df = pd.read_csv("./p_info2.csv", encoding="utf-8-sig")
+console.log(p_df)
+def csv_to_py(result, p_df, room_option_name, patient_option_name):
+    
+    if room_option_name == '전체호실':
+      p_df = p_df
+
+    elif room_option_name == '1호실':
+      p_df = p_df[p_df['no_room'] == 1]
+      p_df = p_df.reset_index()
+
+    elif room_option_name == '2호실':
+      p_df = p_df[p_df['no_room'] == 2]
+      p_df = p_df.reset_index()
+
+    elif room_option_name == '3호실':
+      p_df = p_df[p_df['no_room'] == 3]
+      p_df = p_df.reset_index()
+
+    elif room_option_name == '4호실':
+      p_df = p_df[p_df['no_room'] == 4]
+      p_df = p_df.reset_index()
+
+    if patient_option_name == '전체 환자':
+      result = p_df
+
+    elif patient_option_name == '낙상 주의 환자':
+      result = p_df[p_df['fallen'] == '예']
+
+    elif patient_option_name == '욕창 주의 환자':  
+      result = p_df[p_df['bedsore'] == '예']
+    
+    console.log("result")
+    return result
+
+def create_new_card(flag):
+
+  if flag == 1:
+    global new_row_field
+    new_row_field = create("div", classes = "field has-addons")
+    main_container.element.appendChild(new_row_field.element)
+
+  new_card_field = create("div", classes = "column is-one-seventh")
+  new_row_field.element.appendChild(new_card_field.element)
+
+  new_card = create("div", classes = 'box')
+  new_card_field.element.appendChild(new_card.element)
+
+  bed_info = create("h6", classes = 'bed_info')
+  name_info = create("h6", classes = 'name_info')
+  age_sex_info = create("h6", classes = 'age_sex_info')
+  fallen_info = create("h6", classes = 'fallen_info')
+  bedsore_info = create("h6", classes = 'bedsore_info')
+  stat_info = create("h6", classes = 'stat_info')
+
+  new_card.element.appendChild(bed_info.element)
+  new_card.element.appendChild(name_info.element)
+  new_card.element.appendChild(age_sex_info.element)
+  new_card.element.appendChild(fallen_info.element)
+  new_card.element.appendChild(bedsore_info.element)
+  new_card.element.appendChild(stat_info.element)
+
+  return bed_info, name_info, age_sex_info, fallen_info, bedsore_info, stat_info
+
+def info(result_args, bed_info, name_info, age_sex_info, fallen_info, bedsore_info, stat_info):
+  bed_txt = "• {}병동 {}호실 {}번 침대".format(result_args['no_ward'],
+                                              result_args['no_room'],
+                                              result_args['no_bed'])
+  name_txt = "• {}".format(result_args['p_name'])
+  age_sex_txt = "• {}세, {}".format(result_args['age', 'sex'],)
+  fallen_txt = "• {}".format(result_args['fallen'])
+  bedsore_txt = "• {}".format(result_args['bedsore'])
+  stat_txt = "• {}".format(result_args['status'])
+
+  bed_info.element.innerText = bed_txt
+  name_info.element.innerText = name_txt
+  age_sex_info.element.innerText = age_sex_txt
+  fallen_info.element.innerText = fallen_txt
+  bedsore_info.element.innerText = bedsore_txt
+  stat_info.element.innerText = stat_txt
+
+result = csv_to_py(result, p_df, room_option_name, patient_option_name)
+
+flag = 1
+info_txt = 0
+i = 0
+for i in range(len(result)):
+  bed_info, name_info, age_sex_info, fallen_info, bedsore_info, stat_info = create_new_card(flag)
+
+  info(result.loc[i], bed_info, name_info, age_sex_info, fallen_info, bedsore_info, stat_info)
+  
+  flag = flag + 1
+
+  if flag == 8:
+    flag = 1
+      </py-script>
+    
+    </body>
+
+    <footer>
+
+    </footer>
