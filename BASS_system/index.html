@@ -81,7 +81,7 @@
 import pymysql as ps
 import pandas as pd
 import os
-from js import console
+from pyodide.http import open_url
 
 main_container = Element("main_container")
 
@@ -93,10 +93,12 @@ patient_option_name = patient_option.value
 new_row_field = ""
 result = ""
 
-p_df = pd.read_csv("./p_info2.csv", encoding="utf-8-sig")
-console.log(p_df)
-def csv_to_py(result, p_df, room_option_name, patient_option_name):
-    
+url_content = open_url("https://raw.githubusercontent.com/BlueFriedRice/csv/master/BASS_system/p_info2.csv")
+
+p_df = pd.read_csv(url_content, encoding="utf-8-sig")
+
+def csv_to_py(p_df, room_option_name, patient_option_name):
+    global result
     if room_option_name == '전체호실':
       p_df = p_df
 
@@ -125,7 +127,6 @@ def csv_to_py(result, p_df, room_option_name, patient_option_name):
     elif patient_option_name == '욕창 주의 환자':  
       result = p_df[p_df['bedsore'] == '예']
     
-    console.log("result")
     return result
 
 def create_new_card(flag):
@@ -174,15 +175,15 @@ def info(result_args, bed_info, name_info, age_sex_info, fallen_info, bedsore_in
   bedsore_info.element.innerText = bedsore_txt
   stat_info.element.innerText = stat_txt
 
-result = csv_to_py(result, p_df, room_option_name, patient_option_name)
+final_result = csv_to_py(p_df, room_option_name, patient_option_name)
 
 flag = 1
 info_txt = 0
 i = 0
-for i in range(len(result)):
+for i in range(len(final_result)):
   bed_info, name_info, age_sex_info, fallen_info, bedsore_info, stat_info = create_new_card(flag)
 
-  info(result.loc[i], bed_info, name_info, age_sex_info, fallen_info, bedsore_info, stat_info)
+  info(final_result.loc[i], bed_info, name_info, age_sex_info, fallen_info, bedsore_info, stat_info)
   
   flag = flag + 1
 
